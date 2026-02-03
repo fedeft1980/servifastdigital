@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ServiFast - Catálogo</title>
+  <title>shekinah.net - Catálogo</title>
   <style>
     :root{
       --bg: #0b1020;
@@ -182,7 +182,7 @@
       <div class="brand">
         <div class="logo"></div>
         <div>
-          <div style="font-size:18px">ServiFast</div>
+          <div style="font-size:18px">shekinah.net</div>
           <div style="font-size:11px;color:var(--muted);font-weight:700">Catálogo</div>
         </div>
       </div>
@@ -209,120 +209,223 @@
   </main>
 
   <script>
-    // ====== EDITÁ ESTO CON TUS DATOS ======
-    const CATEGORIAS = [
-      "AURICULARES","AURICULARES BLUETOOTH","BELLEZA","CABLES","CARGADORES",
-      "CONSOLAS/COMPUTACIÓN","HERRAMIENTAS","HOGAR","ILUMINACIÓN",
-      "PARLANTES/MICRÓFONO","PENDRIVE Y MEMORIA","VARIEDADES"
-    ];
+  // ====== EDITÁ ESTO CON TUS DATOS ======
+  const WHATSAPP = "5493412672791"; // TU NÚMERO (sin + ni espacios)
 
-    const PRODUCTOS = [
-      {
-        titulo: "FOCO PARLANTE BLUETOOTH 6348",
-        codigo: "40048",
-        rubro: "PARLANTES/MICRÓFONO",
-        precio: 5278,
-        img: "https://via.placeholder.com/260x220?text=Producto+1"
-      },
-      {
-        titulo: "PARLANTE BLUETOOTH JBL A318 PRO LUCES RGB",
-        codigo: "A318PRO",
-        rubro: "PARLANTES/MICRÓFONO",
-        precio: 23563,
-        img: "https://via.placeholder.com/260x220?text=Producto+2"
-      },
-      {
-        titulo: "CARGADOR RÁPIDO USB-C 20W",
-        codigo: "C20W",
-        rubro: "CARGADORES",
-        precio: 8990,
-        img: "https://via.placeholder.com/260x220?text=Producto+3"
+  const CATEGORIAS = [
+    "AURICULARES","AURICULARES BLUETOOTH","BELLEZA","CABLES","CARGADORES",
+    "CONSOLAS/COMPUTACIÓN","HERRAMIENTAS","HOGAR","ILUMINACIÓN",
+    "PARLANTES/MICRÓFONO","PENDRIVE Y MEMORIA","VARIEDADES"
+  ];
+
+  const PRODUCTOS = [
+    {
+      titulo: "FOCO PARLANTE BLUETOOTH 6348",
+      codigo: "40048",
+      rubro: "PARLANTES/MICRÓFONO",
+      precio: 5278,
+      img: "https://via.placeholder.com/260x220?text=Producto+1"
+    },
+    {
+      titulo: "PARLANTE BLUETOOTH JBL A318 PRO LUCES RGB",
+      codigo: "A318PRO",
+      rubro: "PARLANTES/MICRÓFONO",
+      precio: 23563,
+      img: "https://via.placeholder.com/260x220?text=Producto+2"
+    },
+    {
+      titulo: "CARGADOR RÁPIDO USB-C 20W",
+      codigo: "C20W",
+      rubro: "CARGADORES",
+      precio: 8990,
+      img: "https://via.placeholder.com/260x220?text=Producto+3"
+    }
+  ];
+  // =====================================
+
+  const fmt = n => "$ " + n.toLocaleString("es-AR");
+
+  const catsEl = document.getElementById("cats");
+  const listEl = document.getElementById("list");
+  const qEl = document.getElementById("q");
+
+  let catActiva = "TODOS";
+  let carrito = [];
+
+  function renderCats(){
+    catsEl.innerHTML = "";
+
+    const all = document.createElement("div");
+    all.className = "cat active";
+    all.textContent = "TODOS";
+    all.onclick = () => {
+      catActiva="TODOS";
+      setActiveCat(all);
+      renderList();
+    };
+    catsEl.appendChild(all);
+
+    CATEGORIAS.forEach(c=>{
+      const el = document.createElement("div");
+      el.className = "cat";
+      el.textContent = c;
+      el.onclick = () => {
+        catActiva=c;
+        setActiveCat(el);
+        renderList();
+      };
+      catsEl.appendChild(el);
+    });
+  }
+
+  function setActiveCat(activeEl){
+    [...catsEl.children].forEach(ch=>ch.classList.remove("active"));
+    activeEl.classList.add("active");
+  }
+
+  function renderList(){
+    const query = qEl.value.trim().toLowerCase();
+
+    const filtrados = PRODUCTOS.filter(p=>{
+      const okCat = (catActiva==="TODOS") || (p.rubro===catActiva);
+      const okQ = !query || p.titulo.toLowerCase().includes(query) || p.codigo.toLowerCase().includes(query);
+      return okCat && okQ;
+    });
+
+    listEl.innerHTML = filtrados.map(p=>`
+      <article class="product">
+        <div class="img">
+          <img src="${p.img}" alt="${p.titulo}">
+        </div>
+
+        <div>
+          <div class="p-head">
+            <div>
+              <h3 class="title">${p.titulo}</h3>
+              <div class="meta"><b>Código:</b> ${p.codigo}</div>
+              <div class="meta"><b>Rubro:</b> ${p.rubro}</div>
+            </div>
+            <div class="price">${fmt(p.precio)}</div>
+          </div>
+
+          <div class="p-body">
+            <input id="c_${p.codigo}" class="comment" placeholder="Comentario">
+            <input id="q_${p.codigo}" class="qty" type="number" min="1" placeholder="Cantidad">
+
+            <div class="controls">
+              <button class="btn add" onclick="agregar('${p.codigo}')">Agregar</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    `).join("") || `
+      <div style="color:var(--muted);padding:20px">
+        No hay productos.
+      </div>`;
+  }
+
+  function agregar(codigo){
+
+    const prod = PRODUCTOS.find(p=>p.codigo===codigo);
+    const cant = document.getElementById("q_"+codigo).value;
+    const com = document.getElementById("c_"+codigo).value;
+
+    if(!cant || cant < 1){
+      alert("Ingresá cantidad");
+      return;
+    }
+
+    carrito.push({
+      titulo: prod.titulo,
+      precio: prod.precio,
+      cantidad: cant,
+      comentario: com
+    });
+
+    renderPedido();
+    alert("Agregado al pedido");
+  }
+
+  function renderPedido(){
+
+    let total = 0;
+
+    let html = `
+      <section id="pedido" style="background:#0f1730;padding:20px;border-radius:18px">
+        <h2>🛒 Tu pedido</h2>
+        <hr>
+    `;
+
+    carrito.forEach((p,i)=>{
+
+      const sub = p.precio * p.cantidad;
+      total += sub;
+
+      html += `
+        <p>
+          ${i+1}. ${p.titulo}<br>
+          Cant: ${p.cantidad} - ${fmt(sub)}<br>
+          ${p.comentario ? "Obs: "+p.comentario : ""}
+        </p>
+        <hr>
+      `;
+    });
+
+    html += `
+      <h3>Total: ${fmt(total)}</h3>
+
+      <button class="btn primary" onclick="enviarWhats()">
+        Enviar por WhatsApp
+      </button>
+      </section>
+    `;
+
+    listEl.innerHTML = html + listEl.innerHTML;
+  }
+
+  function enviarWhats(){
+
+    if(carrito.length===0){
+      alert("No hay productos");
+      return;
+    }
+
+    let msg = "📦 *Nuevo pedido*%0A%0A";
+
+    let total = 0;
+
+    carrito.forEach((p,i)=>{
+
+      const sub = p.precio * p.cantidad;
+      total += sub;
+
+      msg += `${i+1}. ${p.titulo}%0A`;
+      msg += `Cant: ${p.cantidad}%0A`;
+      msg += `Sub: ${fmt(sub)}%0A`;
+
+      if(p.comentario){
+        msg += `Obs: ${p.comentario}%0A`;
       }
-    ];
-    // =====================================
 
-    const fmt = n => "$ " + n.toLocaleString("es-AR");
+      msg += `%0A`;
+    });
 
-    const catsEl = document.getElementById("cats");
-    const listEl = document.getElementById("list");
-    const qEl = document.getElementById("q");
+    msg += `💰 Total: ${fmt(total)}`;
 
-    let catActiva = "TODOS";
+    const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
 
-    function renderCats(){
-      catsEl.innerHTML = "";
-      const all = document.createElement("div");
-      all.className = "cat active";
-      all.textContent = "TODOS";
-      all.onclick = () => { catActiva="TODOS"; setActiveCat(all); renderList(); };
-      catsEl.appendChild(all);
+    window.open(url,"_blank");
+  }
 
-      CATEGORIAS.forEach(c=>{
-        const el = document.createElement("div");
-        el.className = "cat";
-        el.textContent = c;
-        el.onclick = () => { catActiva=c; setActiveCat(el); renderList(); };
-        catsEl.appendChild(el);
-      });
-    }
+  document.getElementById("searchBtn").onclick = renderList;
+  qEl.addEventListener("keydown", e=>{
+    if(e.key==="Enter") renderList();
+  });
 
-    function setActiveCat(activeEl){
-      [...catsEl.children].forEach(ch=>ch.classList.remove("active"));
-      activeEl.classList.add("active");
-    }
+  renderCats();
+  renderList();
+</script>
 
-    function renderList(){
-      const query = qEl.value.trim().toLowerCase();
-
-      const filtrados = PRODUCTOS.filter(p=>{
-        const okCat = (catActiva==="TODOS") || (p.rubro===catActiva);
-        const okQ = !query || p.titulo.toLowerCase().includes(query) || p.codigo.toLowerCase().includes(query);
-        return okCat && okQ;
-      });
-
-      listEl.innerHTML = filtrados.map(p=>`
-        <article class="product">
-          <div class="img">
-            <img src="${p.img}" alt="${p.titulo}">
-          </div>
-
-          <div>
-            <div class="p-head">
-              <div>
-                <h3 class="title">${p.titulo}</h3>
-                <div class="meta"><b>Código:</b> ${p.codigo}</div>
-                <div class="meta"><b>Rubro:</b> ${p.rubro}</div>
-              </div>
-              <div class="price">${fmt(p.precio)}</div>
-            </div>
-
-            <div class="p-body">
-              <input class="comment" placeholder="SOLO LETRAS, NO CANTIDADES (Su comentario)">
-              <input class="qty" type="number" min="1" step="1" placeholder="Cantidad">
-              <div class="controls">
-                <button class="btn add" onclick="agregar('${p.codigo}')">Agregar</button>
-                <button class="btn back" onclick="volver()">Volver</button>
-              </div>
-            </div>
-          </div>
-        </article>
-      `).join("") || `<div style="color:var(--muted);padding:20px">No hay productos para mostrar.</div>`;
-    }
-
-    // acciones demo
-    function agregar(codigo){
-      alert("Agregado al pedido: " + codigo);
-    }
-    function volver(){
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-
-    document.getElementById("searchBtn").onclick = renderList;
-    qEl.addEventListener("keydown", e=>{ if(e.key==="Enter") renderList(); });
-
-    renderCats();
-    renderList();
-  </script>
 </body>
 </html>
 
